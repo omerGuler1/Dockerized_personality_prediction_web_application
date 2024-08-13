@@ -1,0 +1,42 @@
+version: '3.8'
+
+# define the different services (containers) that make up the application.
+services:
+  db:
+    image: mysql:8.0
+    container_name: mysql_db
+    env_file:
+      - .env
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  backend:
+    build:
+      context: ./app
+    container_name: backend_app
+    depends_on:
+      - db # wait the db to start
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app
+      - ./data:/app/data
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: frontend_app
+    depends_on:
+      - backend
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./frontend:/frontend
+
+volumes:
+  mysql_data:
